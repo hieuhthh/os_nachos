@@ -48,8 +48,43 @@
 //	is in machine.h.
 //----------------------------------------------------------------------
 
-void
-ExceptionHandler(ExceptionType which)
+// reference from ../machine/mipssim.cc: void Machine::OneInstruction(Instruction *instr)
+// and default code from SyscallException/SC_Add
+void IncreaseProgramCounter()
+{
+	/* set previous programm counter (debugging only)*/
+	kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
+
+	/* set programm counter to next instruction (all Instructions are 4 byte wide)*/
+	kernel->machine->WriteRegister(PCReg, kernel->machine->ReadRegister(PCReg) + 4);
+	
+	/* set next programm counter for brach execution */
+	kernel->machine->WriteRegister(NextPCReg, kernel->machine->ReadRegister(PCReg) + 4);
+}
+
+void SC_Halt_Handler()
+{
+	DEBUG(dbgSys, "Shutdown, initiated by user program.\n");
+	SysHalt();
+	ASSERTNOTREACHED();
+}
+
+void SC_Add_Handler()
+{
+	DEBUG(dbgSys, "Add " << kernel->machine->ReadRegister(4) << " + " << kernel->machine->ReadRegister(5) << "\n");
+	/* Process SysAdd Systemcall*/
+	int result;
+	result = SysAdd(/* int op1 */(int)kernel->machine->ReadRegister(4), /* int op2 */(int)kernel->machine->ReadRegister(5));
+
+	DEBUG(dbgSys, "Add returning with " << result << "\n");
+	/* Prepare Result */
+	kernel->machine->WriteRegister(2, (int)result);
+
+	/* Modify return point */
+	IncreaseProgramCounter();
+}
+
+void ExceptionHandler(ExceptionType which)
 {
     int type = kernel->machine->ReadRegister(2);
 
@@ -58,86 +93,65 @@ ExceptionHandler(ExceptionType which)
     switch (which) 
 	{
 		case NoException:
-            DEBUG(dbgSys, "\nEverything ok!\n");
-			printf("\nEverything ok!\n");
             return;
 		case PageFaultException:
 			DEBUG('a', "\nNo valid translation found\n");
-			printf("\nNo valid translation found\n");
-			interrupt->Halt();
+			cerr << "\nNo valid translation found\n";
+			SysHalt();
+            ASSERTNOTREACHED();
 			break;
 		case ReadOnlyException:
 			DEBUG('a', "\nWrite attempted to page marked \"read-only\"\n");
-			printf("\nWrite attempted to page marked \"read-only\"\n");
-			interrupt->Halt();
+			cerr << "\nWrite attempted to page marked \"read-only\"\n";
+			SysHalt();
+            ASSERTNOTREACHED();
 			break;
 		case BusErrorException:
 			DEBUG('a', "\nTranslation resulted in an invalid physical address\n");
-			printf("\nTranslation resulted in an invalid physical address\n");
-			interrupt->Halt();
+			cerr << "\nTranslation resulted in an invalid physical address\n";
+			SysHalt();
+            ASSERTNOTREACHED();
 			break;
 		case AddressErrorException:
 			DEBUG('a', "\nUnaligned reference or one that was beyond the end of the address space\n");
-			printf("\nUnaligned reference or one that was beyond the end of the address space\n");
-			interrupt->Halt();
+			cerr << "\nUnaligned reference or one that was beyond the end of the address space\n";
+			SysHalt();
+            ASSERTNOTREACHED();
 			break;
 		case OverflowException:
 			DEBUG('a', "\nInteger overflow in add or sub\n");
-			printf("\nInteger overflow in add or sub\n");
-			interrupt->Halt();
+			cerr << "\nInteger overflow in add or sub\n";
+			SysHalt();
+            ASSERTNOTREACHED();
 			break;
 		case IllegalInstrException:
 			DEBUG('a', "\nUnimplemented or reserved instr\n");
-			printf("\nUnimplemented or reserved instr\n");
-			interrupt->Halt();
+			cerr << "\nUnimplemented or reserved instr\n";
+			SysHalt();
+            ASSERTNOTREACHED();
+			break;
+		case NumExceptionTypes:
+			DEBUG('a', "\nNumExceptionTypes\n");
+			cerr << "\nNumExceptionTypes\n";
+			SysHalt();
+            ASSERTNOTREACHED();
 			break;
     	case SyscallException:
       		switch(type) 
 			{
       			case SC_Halt:
-					DEBUG(dbgSys, "Shutdown, initiated by user program.\n");
-					SysHalt();
-					ASSERTNOTREACHED();
+					SC_Halt_Handler();
 					break;
-
       			case SC_Add:
-					DEBUG(dbgSys, "Add " << kernel->machine->ReadRegister(4) << " + " << kernel->machine->ReadRegister(5) << "\n");
-					/* Process SysAdd Systemcall*/
-					int result;
-					result = SysAdd(/* int op1 */(int)kernel->machine->ReadRegister(4),
-							/* int op2 */(int)kernel->machine->ReadRegister(5));
-
-					DEBUG(dbgSys, "Add returning with " << result << "\n");
-					/* Prepare Result */
-					kernel->machine->WriteRegister(2, (int)result);
-	
-					/* Modify return point */
-					{
-					/* set previous programm counter (debugging only)*/
-					kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
-
-					/* set programm counter to next instruction (all Instructions are 4 byte wide)*/
-					kernel->machine->WriteRegister(PCReg, kernel->machine->ReadRegister(PCReg) + 4);
-					
-					/* set next programm counter for brach execution */
-					kernel->machine->WriteRegister(NextPCReg, kernel->machine->ReadRegister(PCReg)+4);
-					}
-
-					return;
-	
-					ASSERTNOTREACHED();
-
+					SC_Add_Handler();
 					break;
-
       			default:
 					cerr << "Unexpected system call " << type << "\n";
 					break;
 			}
       		break;
-			
     	default:
       		cerr << "Unexpected user mode exception" << (int)which << "\n";
-      		break;
+      		ASSERTNOTREACHED();
     }
-    ASSERTNOTREACHED();
 }
