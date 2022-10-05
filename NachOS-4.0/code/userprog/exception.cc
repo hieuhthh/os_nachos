@@ -99,31 +99,36 @@ void SC_ReadNum_Handler()
     BUGS: Taking a single  minus sign as a number
     PROGRESS: Not fixed yet
   */
-	while (true)
+  	bool ok = true;
+	while (!ok)
 	{
 		// read from console
 		char c = kernel->synchConsoleIn->GetChar(); 
 		
-		bool ok = false;
+		
 		if (c == '-' && n == 0)
 		{
-			ok = true;
+			ok = false;
 			isNeg = true;
 		}
 		else if (c >= '0' and c <= '9')
-			ok = true;
+			ok = false;
 		if (!ok)
 			break;
 		str[n++] = c;
 	}
 
 	long long value = 0;
+
 	for (int i = 0; i < n; ++i)
 		value = value * 10 + (str[i] - '0');	
 	
 	if (isNeg)
 		value = -value;
 
+	if (!ok){
+		DEBUG(dbgSys, "Error reading integer numbers!\n");
+	} else
 	if (n > INT_LEN_MAX || value < INT_MIN || value > INT_MAX)
 	{
 		value = 0;
