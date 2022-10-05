@@ -95,7 +95,10 @@ void SC_ReadNum_Handler()
 	char *str = new char[INT_LEN_MAX + 1];
 	bool isNeg = false; 
 	int n = 0;
-
+  /**
+    BUGS: Taking a single  minus sign as a number
+    PROGRESS: Not fixed yet
+  */
 	while (true)
 	{
 		// read from console
