@@ -112,8 +112,10 @@ ifeq ($(hosttype),unknown)
 PROGRAMS = unknownhost
 else
 # change this if you create a new test program!
-PROGRAMS = add halt shell matmult sort segments
+PROGRAMS = add halt shell matmult sort segments check
 endif
+
+# ../build.linux/nachos -x halt
 
 all: $(PROGRAMS)
 
@@ -126,9 +128,18 @@ halt: halt.o start.o
 	$(LD) $(LDFLAGS) start.o halt.o -o halt.coff
 	$(COFF2NOFF) halt.coff halt
 
+# custom 
+
+check.o: check.c
+	$(CC) $(CFLAGS) -c check.c
+check: check.o start.o
+	$(LD) $(LDFLAGS) start.o check.o -o check.coff
+	$(COFF2NOFF) check.coff check
+
+# custom
+
 add.o: add.c
 	$(CC) $(CFLAGS) -c add.c
-
 add: add.o start.o
 	$(LD) $(LDFLAGS) start.o add.o -o add.coff
 	$(COFF2NOFF) add.coff add

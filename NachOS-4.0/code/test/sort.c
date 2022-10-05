@@ -24,11 +24,18 @@
 
 int A[SIZE];	/* size of physical memory; with code, we'll run out of space!*/
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 00b26102456bea748dab8dea542574f0ba112007
 int
 main()
 {
     int i, j, tmp;
+<<<<<<< HEAD
+=======
+
+>>>>>>> 00b26102456bea748dab8dea542574f0ba112007
     /* first initialize the array, in reverse sorted order */
     for (i = 0; i < SIZE; i++) {
         A[i] = (SIZE-1) - i;
@@ -64,7 +71,12 @@ main()
             Exit(1);
         }   
     }
+<<<<<<< HEAD
     // printf("Gei");
     Exit(0);
     // Halt();
+=======
+
+    Exit(0);
+>>>>>>> 00b26102456bea748dab8dea542574f0ba112007
 }
