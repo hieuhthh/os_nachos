@@ -99,8 +99,7 @@ void SC_ReadNum_Handler()
 	while (true)
 	{
 		// read from console
-		char c;
-		c = kernel->synchConsoleIn->GetChar(); 
+		char c = kernel->synchConsoleIn->GetChar(); 
 		
 		bool ok = false;
 		if (c == '-' && n == 0)

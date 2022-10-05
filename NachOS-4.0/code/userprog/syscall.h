@@ -37,14 +37,14 @@
 
 // Systemcall can code
 
-#define SC_Add 42
-#define SC_ReadNum 43
-#define SC_PrintNum 44
-#define SC_ReadChar 45
-#define SC_PrintChar 46
-#define SC_ReadString 47
-#define SC_PrintString 48
-#define SC_RandomNum 22
+#define SC_Add		    42
+#define SC_ReadNum      43
+#define SC_PrintNum     44
+#define SC_ReadChar     45
+#define SC_PrintChar    46
+#define SC_RandomNum    47
+#define SC_ReadString   48
+#define SC_PrintString  49
 
 #ifndef IN_ASM
 
@@ -66,6 +66,18 @@ void Halt();
  */
 
 int Add(int op1, int op2);
+
+// code from here
+
+int ReadNum();
+void PrintNum(int number);
+char ReadChar();
+void PrintChar(char character);
+int RandomNum();
+void ReadString(char buffer[], int length);
+void PrintString(char buffer[]);
+
+// end code
 
 /* Address space control operations: Exit, Exec, Execv, and Join */
 
@@ -95,20 +107,6 @@ SpaceId ExecV(int argc, char *argv[]);
 int Join(SpaceId id);
 
 void Halt();
-
-int ReadNum();
-
-void PrintNum(int number);
-
-int RandomNum();
-
-char ReadChar();
-
-void PrintChar(char character);
-
-void ReadString(char buffer[], int length);
-
-void PrintString(char buffer[]);
 
 /* File system operations: Create, Remove, Open, Read, Write, Close
  * These functions are patterned after UNIX -- files represent
