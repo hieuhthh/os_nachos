@@ -72,5 +72,3 @@ class Kernel {
 
 
 #endif // KERNEL_H
-
-

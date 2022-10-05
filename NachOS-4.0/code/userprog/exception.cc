@@ -25,6 +25,9 @@
 #include "main.h"
 #include "syscall.h"
 #include "ksyscall.h"
+#include "synchconsole.h"
+#include "filesys.h"
+
 //----------------------------------------------------------------------
 // ExceptionHandler
 // 	Entry point into the Nachos kernel.  Called when a user program
@@ -96,7 +99,9 @@ void SC_ReadNum_Handler()
 	while (true)
 	{
 		// read from console
-		char c = kernel->synchConsoleIn->GetChar(); 
+		char c;
+		c = kernel->synchConsoleIn->GetChar(); 
+		
 		bool ok = false;
 		if (c == '-' && n == 0)
 		{
