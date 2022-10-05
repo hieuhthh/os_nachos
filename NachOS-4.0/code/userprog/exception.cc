@@ -84,6 +84,51 @@ void SC_Add_Handler()
 	IncreaseProgramCounter();
 }
 
+void SC_ReadNum_Handler()
+{
+	int INT_MIN = -2147483648;
+	int INT_MAX = 2147483647;
+	int INT_LEN_MAX = 11;
+	char *str = new char[INT_LEN_MAX + 1];
+	bool isNeg = false; 
+	int n = 0;
+
+	while (true)
+	{
+		// read from console
+		char c = kernel->synchConsoleIn->GetChar(); 
+		bool ok = false;
+		if (c == '-' && n == 0)
+		{
+			ok = true;
+			isNeg = true;
+		}
+		else if (c >= '0' and c <= '9')
+			ok = true;
+		if (!ok)
+			break;
+		str[n++] = c;
+	}
+
+	long long value = 0;
+	for (int i = 0; i < n; ++i)
+		value = value * 10 + (str[i] - '0');	
+	
+	if (isNeg)
+		value = -value;
+
+	if (n > INT_LEN_MAX || value < INT_MIN || value > INT_MAX)
+	{
+		value = 0;
+		DEBUG(dbgSys, "Integer Overflow\n");
+	}
+	else DEBUG(dbgSys, "ReadNum: " << value << "\n");
+
+	delete[]str;
+	kernel->machine->WriteRegister(2, value);
+	IncreaseProgramCounter();
+}
+
 void ExceptionHandler(ExceptionType which)
 {
     int type = kernel->machine->ReadRegister(2);
@@ -145,13 +190,16 @@ void ExceptionHandler(ExceptionType which)
       			case SC_Add:
 					SC_Add_Handler();
 					break;
+				case SC_ReadNum:
+					SC_ReadNum_Handler();
+					break;
       			default:
 					cerr << "Unexpected system call " << type << "\n";
 					break;
 			}
       		break;
     	default:
-      		cerr << "Unexpected user mode exception" << (int)which << "\n";
+      		cerr << "Unexpected user mode exception " << (int)which << "\n";
       		ASSERTNOTREACHED();
     }
 }
