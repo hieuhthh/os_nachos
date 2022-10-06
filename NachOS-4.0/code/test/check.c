@@ -2,6 +2,7 @@
 
 int main()
 {
+
     // char buffer[300];
     // int length = 5;
     // ReadString(buffer, length);
