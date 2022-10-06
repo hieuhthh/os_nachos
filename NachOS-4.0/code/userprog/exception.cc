@@ -88,8 +88,10 @@ void SC_Add_Handler()
 
 void SC_ReadNum_Handler()
 {
+	// min and max range of integer
 	int INT_MIN = -2147483648;
 	int INT_MAX = 2147483647;
+	// len of INT_MIN (included '-')
 	int INT_LEN_MAX = 11;
 	char *str = new char[INT_LEN_MAX + 1];
 	bool isNeg = false; 
@@ -114,6 +116,7 @@ void SC_ReadNum_Handler()
 
 	int start = 0;
 	if (isNeg)
+		// skip the '-'
 		start = 1;
 	long long value = 0;
 	for (int i = start; i < n; ++i)
@@ -151,10 +154,12 @@ void SC_PrintNum_Handler()
 	if (num < 0)
 	{
 		kernel->synchConsoleOut->PutChar('-');
-        num = -num;
+        // this is why we need long long (--2147483648 > 2147483647)
+		num = -num;
 	}
 
-	int INT_LEN_MAX = 11;
+	// len of INT (not included '-')
+	int INT_LEN_MAX = 10;
 	char *str = new char[INT_LEN_MAX + 1];
 	int n = 0;
 
@@ -190,6 +195,132 @@ void SC_PrintChar_Handler()
 
     kernel->synchConsoleOut->PutChar(c);
 
+	IncreaseProgramCounter();
+}
+
+void SC_RandomNum_Handler()
+{
+	// initialization
+	srandom(time(NULL)); 
+	// get random number
+	int num = random();
+
+	DEBUG(dbgSys, "RandomNum: " << num << "\n");
+
+	kernel->machine->WriteRegister(2, num);
+
+	IncreaseProgramCounter();
+}
+
+// String Function
+
+// Input:
+// + User space address (int)
+// + Limit of buffer (int)
+// Output:
+// + Buffer (char*)
+// Purpose: 
+// + Copy buffer from User memory space to System memory space
+char *User2System(int virtAddr, int limit)
+{
+	int i; // index
+	int oneChar;
+	char *kernelBuf = NULL;
+
+	kernelBuf = new char[limit + 1]; // need for terminal string
+	if (kernelBuf == NULL)
+		return kernelBuf;
+	memset(kernelBuf, 0, limit + 1);
+
+	for (i = 0; i < limit; i++)
+	{
+		kernel->machine->ReadMem(virtAddr + i, 1, &oneChar);
+		kernelBuf[i] = (char)oneChar;
+		if (oneChar == 0)
+			break;
+	}
+	return kernelBuf;
+}
+
+// Input:
+// + User space address (int)
+// + Limit of buffer (int)
+// + Buffer (char[])
+// Output:
+// + Number of bytes copied (int)
+// Purpose: 
+// + Copy buffer from System memory space to User memory space
+int System2User(int virtAddr, int len, char *buffer)
+{
+	if (len < 0)
+		return -1;
+	if (len == 0)
+		return len;
+	int i = 0;
+	int oneChar = 0;
+	do
+	{
+		oneChar = (int)buffer[i];
+		kernel->machine->WriteMem(virtAddr + i, 1, oneChar);
+		i++;
+	} while (i < len && oneChar != 0);
+	return i;
+}
+
+void SC_ReadString_Handler()
+{
+	int MAX_LEN = 255;
+	int addr = kernel->machine->ReadRegister(4);
+	int len = kernel->machine->ReadRegister(5);
+
+	// check if length < 0 or length too big (> MAX_LEN)
+	if (len < 0 or len > MAX_LEN)
+	{
+		DEBUG(dbgSys, "Invalid string length\n");
+		return;
+	}
+
+	char *buffer = User2System(addr, len + 1);
+	int i = 0;
+	
+	while (true)
+	{
+		char c = kernel->synchConsoleIn->GetChar();
+
+		if (i >= len || c == '\0' || c == '\n')
+			break;
+		
+		buffer[i++] = c;
+	}
+
+	buffer[i] = '\0';
+
+	System2User(addr, len, buffer);
+
+	delete[]buffer;
+
+	IncreaseProgramCounter();
+}
+
+void SC_PrintString_Handler()
+{
+	int MAX_LEN = 255;
+	int addr = kernel->machine->ReadRegister(4);
+	char *buffer = User2System(addr, MAX_LEN);
+
+	if (!buffer)
+	{
+		DEBUG(dbgSys, "Buffer is NULL\n");
+		IncreaseProgramCounter();
+		return;
+	}
+
+	int i = 0;
+
+	while (i < MAX_LEN && buffer[i] != '\0')
+		kernel->synchConsoleOut->PutChar(buffer[i++]);
+
+	delete[]buffer;
 	IncreaseProgramCounter();
 }
 
@@ -265,6 +396,15 @@ void ExceptionHandler(ExceptionType which)
 					break;
 				case SC_PrintChar:
 					SC_PrintChar_Handler();
+					break;
+				case SC_RandomNum:
+					SC_RandomNum_Handler();
+					break;
+				case SC_ReadString:
+					SC_ReadString_Handler();
+					break;
+				case SC_PrintString:
+					SC_PrintString_Handler();
 					break;
       			default:
 					cerr << "Unexpected system call " << type << "\n";
