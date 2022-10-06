@@ -8,6 +8,6 @@ int main()
     a = ReadNum();
     b = ReadNum();
     c = Add(a, b);
-    // PrintNum(c);
+    PrintNum(c);
     Halt();
 }

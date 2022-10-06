@@ -135,6 +135,42 @@ void SC_ReadNum_Handler()
 	IncreaseProgramCounter();
 }
 
+void SC_PrintNum_Handler()
+{
+	int int_num = kernel->machine->ReadRegister(4);
+	DEBUG(dbgSys, "PrintNum " << int_num << "\n");
+	long long num = (long long)int_num;
+
+	if (num == 0)
+	{
+		kernel->synchConsoleOut->PutChar('0');
+		IncreaseProgramCounter();
+		return;
+	}
+
+	if (num < 0)
+	{
+		kernel->synchConsoleOut->PutChar('-');
+        num = -num;
+	}
+
+	int INT_LEN_MAX = 11;
+	char *str = new char[INT_LEN_MAX + 1];
+	int n = 0;
+
+	while (num)
+	{
+		str[n++] = (num % 10) + '0';
+		num /= 10;
+	}
+
+	for (int i = n - 1; i >= 0; --i)
+		kernel->synchConsoleOut->PutChar(str[i]);
+	
+	delete[]str;
+	IncreaseProgramCounter();
+}
+
 void ExceptionHandler(ExceptionType which)
 {
     int type = kernel->machine->ReadRegister(2);
@@ -198,6 +234,9 @@ void ExceptionHandler(ExceptionType which)
 					break;
 				case SC_ReadNum:
 					SC_ReadNum_Handler();
+					break;
+				case SC_PrintNum:
+					SC_PrintNum_Handler();
 					break;
       			default:
 					cerr << "Unexpected system call " << type << "\n";
