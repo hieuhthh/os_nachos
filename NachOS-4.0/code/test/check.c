@@ -2,12 +2,11 @@
 
 int main()
 {
-    int a, b, c;
-    a = 2;
-    b = 3;
-    a = ReadNum();
-    b = ReadNum();
-    c = Add(a, b);
-    // PrintNum(c);
+    // char buffer[300];
+    // int length = 5;
+    // ReadString(buffer, length);
+    // PrintString(buffer);
+    // char buffer2[] = "adshakjshdakd\n";
+    // PrintString(buffer2);
     Halt();
 }
