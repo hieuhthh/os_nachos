@@ -26,7 +26,6 @@
 #include "syscall.h"
 #include "ksyscall.h"
 #include "synchconsole.h"
-#include "filesys.h"
 
 //----------------------------------------------------------------------
 // ExceptionHandler
@@ -138,8 +137,9 @@ void SC_ReadNum_Handler()
 void SC_PrintNum_Handler()
 {
 	int int_num = kernel->machine->ReadRegister(4);
-	DEBUG(dbgSys, "PrintNum " << int_num << "\n");
 	long long num = (long long)int_num;
+
+	DEBUG(dbgSys, "PrintNum: " << int_num << "\n");
 
 	if (num == 0)
 	{
@@ -168,6 +168,28 @@ void SC_PrintNum_Handler()
 		kernel->synchConsoleOut->PutChar(str[i]);
 	
 	delete[]str;
+	IncreaseProgramCounter();
+}
+
+void SC_ReadChar_Handler()
+{
+	char c = kernel->synchConsoleIn->GetChar();
+
+	DEBUG(dbgSys, "ReadChar: " << c << "\n");
+
+	kernel->machine->WriteRegister(2, (int)c);
+
+	IncreaseProgramCounter();
+}
+
+void SC_PrintChar_Handler()
+{
+	char c = kernel->machine->ReadRegister(4);
+
+	DEBUG(dbgSys, "PrintChar: " << c << "\n");
+
+    kernel->synchConsoleOut->PutChar(c);
+
 	IncreaseProgramCounter();
 }
 
@@ -237,6 +259,12 @@ void ExceptionHandler(ExceptionType which)
 					break;
 				case SC_PrintNum:
 					SC_PrintNum_Handler();
+					break;
+				case SC_ReadChar:
+					SC_ReadChar_Handler();
+					break;
+				case SC_PrintChar:
+					SC_PrintChar_Handler();
 					break;
       			default:
 					cerr << "Unexpected system call " << type << "\n";

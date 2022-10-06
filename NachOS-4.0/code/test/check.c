@@ -2,12 +2,9 @@
 
 int main()
 {
-    int a, b, c;
-    a = 2;
-    b = 3;
-    a = ReadNum();
-    b = ReadNum();
-    c = Add(a, b);
-    PrintNum(c);
+    char c = 'a';
+    PrintChar(c);
+    c = ReadChar();
+    PrintChar(c);
     Halt();
 }
