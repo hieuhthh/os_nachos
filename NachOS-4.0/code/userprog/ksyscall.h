@@ -22,7 +22,7 @@ void SysHalt()
 }
 
 
-long long SysAdd(long long op1, long long op2)
+int SysAdd(int op1, int op2)
 {
   return op1 + op2;
 }

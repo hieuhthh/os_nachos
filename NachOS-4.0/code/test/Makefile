@@ -112,7 +112,7 @@ ifeq ($(hosttype),unknown)
 PROGRAMS = unknownhost
 else
 # change this if you create a new test program!
-PROGRAMS = add halt shell matmult sort segments help check check_read_num bubblesort ascii
+PROGRAMS = add halt shell matmult sort segments help check check_str bubblesort ascii
 endif
 
 # ../build.linux/nachos -x halt
@@ -136,12 +136,18 @@ check: check.o start.o
 	$(LD) $(LDFLAGS) start.o check.o -o check.coff
 	$(COFF2NOFF) check.coff check
 
-check_read_num.o: check_read_num.c
-	$(CC) $(CFLAGS) -c check_read_num.c
+check_str.o: check_str.c
+	$(CC) $(CFLAGS) -c check_str.c
+check_str: check_str.o start.o
+	$(LD) $(LDFLAGS) start.o check_str.o -o check_str.coff
+	$(COFF2NOFF) check_str.coff check_str
 
-check_read_num: check_read_num.o start.o
-	$(LD) $(LDFLAGS) start.o check_read_num.o -o check_read_num.coff
-	$(COFF2NOFF) check_read_num.coff check_read_num
+# check_read_num.o: check_read_num.c
+# 	$(CC) $(CFLAGS) -c check_read_num.c
+
+# check_read_num: check_read_num.o start.o
+# 	$(LD) $(LDFLAGS) start.o check_read_num.o -o check_read_num.coff
+# 	$(COFF2NOFF) check_read_num.coff check_read_num
 
 bubblesort.o: bubblesort.c
 	$(CC) $(CFLAGS) -c bubblesort.c
