@@ -52,6 +52,9 @@
 
 // reference from ../machine/mipssim.cc: void Machine::OneInstruction(Instruction *instr)
 // and default code from SyscallException/SC_Add
+
+
+
 void IncreaseProgramCounter()
 {
 	/* set previous programm counter (debugging only)*/
@@ -75,9 +78,14 @@ void SC_Add_Handler()
 {
 	DEBUG(dbgSys, "Add " << kernel->machine->ReadRegister(4) << " + " << kernel->machine->ReadRegister(5) << "\n");
 	/* Process SysAdd Systemcall*/
-	int result;
-	result = SysAdd(/* int op1 */(int)kernel->machine->ReadRegister(4), /* int op2 */(int)kernel->machine->ReadRegister(5));
-
+	int INT_MIN = -2147483648;
+	int INT_MAX = 2147483647;
+	long long result;
+	result = (long long)kernel->machine->ReadRegister(4) + (long long)kernel->machine->ReadRegister(5);
+	if (result > INT_MAX || result < INT_MIN){
+		result = 0;
+		DEBUG(dbgSys, "Integer artihmetic overflow, converting the result back 0\n");
+	} else
 	DEBUG(dbgSys, "Add returning with " << result << "\n");
 	/* Prepare Result */
 	kernel->machine->WriteRegister(2, (int)result);
@@ -113,11 +121,10 @@ void SC_ReadNum_Handler()
 			break;
 		str[n++] = c;
 	}
-
 	int start = 0;
-	if (isNeg)
-		// skip the '-'
+	if (isNeg) 
 		start = 1;
+	 // starts from 1 if isNeg, 0 otherwise
 	long long value = 0;
 	for (int i = start; i < n; ++i)
 		value = value * 10 + (str[i] - '0');	
@@ -128,7 +135,7 @@ void SC_ReadNum_Handler()
 	if (n > INT_LEN_MAX || value < INT_MIN || value > INT_MAX)
 	{
 		value = 0;
-		DEBUG(dbgSys, "Integer Overflow\n");
+		DEBUG(dbgSys, "Integer Overflow, converting the result back 0\n");
 	}
 	else DEBUG(dbgSys, "ReadNum: " << value << "\n");
 
