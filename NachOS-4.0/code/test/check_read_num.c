@@ -2,16 +2,11 @@
 
 int main()
 {
-    int a;
-    int b;
-    int c;
-
+    int a, b, c;
+    // Thử nghiệm hàm ReadNum, Add, PrintNum
     a = ReadNum();
-    // PrintNum(a);
-    
     b = ReadNum();
-    // PrintNum(b);
-    c = a + b;
+    c = Add(a, b);
     PrintNum(c);
     Halt();
 }
