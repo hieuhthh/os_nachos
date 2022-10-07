@@ -74,4 +74,5 @@ int main()
     bubbleSort(a, n, type);
     printArray(a, n);
     PrintChar('\n');
+    Halt();
 }
