@@ -47,6 +47,15 @@ int main()
         Halt();
     }
 
+    for (i = 0; i < n; i++)
+    {
+        PrintString("Enter a[");
+        PrintNum(i+1);
+        PrintString("]: ");
+
+        a[i] = ReadNum();
+    }
+
     PrintString("Enter type - the way to sort the array\n");
     PrintString("       0: ascending order\n");
     PrintString("       1: descending order\n");
@@ -57,15 +66,6 @@ int main()
     {
         PrintString("Invalid type\n");
         Halt();
-    }
-
-    for (i = 0; i < n; i++)
-    {
-        PrintString("Enter a[");
-        PrintNum(i+1);
-        PrintString("]: ");
-
-        a[i] = ReadNum();
     }
 
     PrintString("Input array:\n");
