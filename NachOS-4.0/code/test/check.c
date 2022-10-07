@@ -4,10 +4,7 @@
 
 int main()
 {
-
     int a, b, c;
-    
-    
     // ReadNum, Add, PrintNum test.
     PrintString("ReadNum, Add and PrintNum testing\n");
     PrintString("Enter the number a = ");
