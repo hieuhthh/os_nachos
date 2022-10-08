@@ -104,7 +104,11 @@ void SC_ReadNum_Handler()
 	char *str = new char[INT_LEN_MAX + 1];
 	bool isNeg = false; 
 	int n = 0;
-
+	// The idea was adding digits from the back
+	// Assume value = 123 and we want to append 5 to the end
+	// So new value will be 1235 = 123 * 10 + 5
+	// So we will have value = value * 10 + digit
+	// Iterate through the string from left to right to add each digits.
 	while (n <= INT_LEN_MAX)
 	{
 		// read from console
@@ -208,6 +212,7 @@ void SC_PrintChar_Handler()
 void SC_RandomNum_Handler()
 {
 	// initialization
+	// set random seed
 	srandom(time(NULL)); 
 	// get random number
 	int num = random();
@@ -313,6 +318,7 @@ void SC_PrintString_Handler()
 {
 	int MAX_LEN = 255;
 	int addr = kernel->machine->ReadRegister(4);
+	// Moving the buffer from user space to kernel space
 	char *buffer = User2System(addr, MAX_LEN);
 
 	if (!buffer)

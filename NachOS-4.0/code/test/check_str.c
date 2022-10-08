@@ -11,6 +11,8 @@ int main(){
     PrintString("Enter the string: ");
     ReadString(buffer, length);
     endl;
+    // To check if the string is shorter than the length.
+    // Calculate the actual length (to see whether end character '\0' exists or not)
     for(i = 0; buffer[i] != '\0'; ++i){
         ++cnt;
     }
