@@ -328,6 +328,7 @@ void SC_PrintString_Handler()
 		kernel->synchConsoleOut->PutChar(buffer[i++]);
 
 	delete[]buffer;
+	
 	IncreaseProgramCounter();
 }
 

@@ -112,7 +112,7 @@ ifeq ($(hosttype),unknown)
 PROGRAMS = unknownhost
 else
 # change this if you create a new test program!
-PROGRAMS = add halt shell matmult sort segments help check check_str check_random_gen check_char bubblesort ascii
+PROGRAMS = add halt shell matmult sort segments help check_read_num_add check_str check_random_gen check_char bubblesort ascii
 endif
 
 # ../build.linux/nachos -x halt
@@ -130,11 +130,11 @@ halt: halt.o start.o
 
 # custom 
 
-check.o: check.c
-	$(CC) $(CFLAGS) -c check.c
-check: check.o start.o
-	$(LD) $(LDFLAGS) start.o check.o -o check.coff
-	$(COFF2NOFF) check.coff check
+check_read_num_add.o: check_read_num_add.c
+	$(CC) $(CFLAGS) -c check_read_num_add.c
+check_read_num_add: check_read_num_add.o start.o
+	$(LD) $(LDFLAGS) start.o check_read_num_add.o -o check_read_num_add.coff
+	$(COFF2NOFF) check_read_num_add.coff check_read_num_add
 
 check_str.o: check_str.c
 	$(CC) $(CFLAGS) -c check_str.c
@@ -154,16 +154,8 @@ check_char: check_char.o start.o
 	$(LD) $(LDFLAGS) start.o check_char.o -o check_char.coff
 	$(COFF2NOFF) check_char.coff check_char
 
-# check_read_num.o: check_read_num.c
-# 	$(CC) $(CFLAGS) -c check_read_num.c
-
-# check_read_num: check_read_num.o start.o
-# 	$(LD) $(LDFLAGS) start.o check_read_num.o -o check_read_num.coff
-# 	$(COFF2NOFF) check_read_num.coff check_read_num
-
 bubblesort.o: bubblesort.c
 	$(CC) $(CFLAGS) -c bubblesort.c
-
 bubblesort: bubblesort.o start.o
 	$(LD) $(LDFLAGS) start.o bubblesort.o -o bubblesort.coff
 	$(COFF2NOFF) bubblesort.coff bubblesort
