@@ -112,7 +112,7 @@ ifeq ($(hosttype),unknown)
 PROGRAMS = unknownhost
 else
 # change this if you create a new test program!
-PROGRAMS = add halt shell matmult sort segments help check_read_num_add check_str check_random_gen check_char bubblesort ascii
+PROGRAMS = add halt shell matmult sort segments help check_read_num_add check_str check_random_gen check_char bubblesort ascii create
 endif
 
 # ../build.linux/nachos -x halt
@@ -177,6 +177,12 @@ bubblesort.o: bubblesort.c
 bubblesort: bubblesort.o start.o
 	$(LD) $(LDFLAGS) start.o bubblesort.o -o bubblesort.coff
 	$(COFF2NOFF) bubblesort.coff bubblesort
+
+create.o: create.c
+	$(CC) $(CFLAGS) -c create.c
+create: create.o start.o
+	$(LD) $(LDFLAGS) start.o create.o -o create.coff
+	$(COFF2NOFF) create.coff create
 
 # default
 

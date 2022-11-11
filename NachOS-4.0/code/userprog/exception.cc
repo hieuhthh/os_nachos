@@ -53,7 +53,8 @@
 // reference from ../machine/mipssim.cc: void Machine::OneInstruction(Instruction *instr)
 // and default code from SyscallException/SC_Add
 
-
+#define MAX_LEN 256 // max_len 255 + 1
+#define MAX_LEN_FILE_NAME 33 // max_len_file_name 32 + 1
 
 void IncreaseProgramCounter()
 {
@@ -281,7 +282,6 @@ int System2User(int virtAddr, int len, char *buffer)
 
 void SC_ReadString_Handler()
 {
-	int MAX_LEN = 255;
 	int addr = kernel->machine->ReadRegister(4);
 	int len = kernel->machine->ReadRegister(5);
 
@@ -316,7 +316,6 @@ void SC_ReadString_Handler()
 
 void SC_PrintString_Handler()
 {
-	int MAX_LEN = 255;
 	int addr = kernel->machine->ReadRegister(4);
 	// Moving the buffer from user space to kernel space
 	char *buffer = User2System(addr, MAX_LEN);
@@ -335,6 +334,46 @@ void SC_PrintString_Handler()
 
 	delete[]buffer;
 	
+	IncreaseProgramCounter();
+}
+
+void SC_Create_Handler()
+{
+	int addr = kernel->machine->ReadRegister(4);
+	// Moving the buffer from user space to kernel space
+	char *buffer = User2System(addr, MAX_LEN_FILE_NAME);
+
+	if (strlen(buffer) == 0)
+	{
+		DEBUG(dbgSys, "Filename is not valid\n");
+		kernel->machine->WriteRegister(2, -1);
+		delete[]buffer;
+		IncreaseProgramCounter();
+		return;
+	}
+
+	if (!buffer)
+	{
+		DEBUG(dbgSys, "Buffer is NULL - not enough memory in the system or cant locate the user string\n");
+		kernel->machine->WriteRegister(2, -1);
+		delete[]buffer;
+		IncreaseProgramCounter();
+		return;
+	}
+
+	// create file with initialSize = 0
+	if (!kernel->fileSystem->Create(buffer))
+	{
+		DEBUG(dbgSys, "Create file unsuccessfully\n");
+		kernel->machine->WriteRegister(2, -1);
+		delete[]buffer;
+		IncreaseProgramCounter();
+		return;
+	}
+
+	DEBUG(dbgSys, "Create file successfully\n");
+	kernel->machine->WriteRegister(2, 0);
+	delete[]buffer;
 	IncreaseProgramCounter();
 }
 
@@ -419,6 +458,9 @@ void ExceptionHandler(ExceptionType which)
 					break;
 				case SC_PrintString:
 					SC_PrintString_Handler();
+					break;
+				case SC_Create:
+					SC_Create_Handler();
 					break;
       			default:
 					cerr << "Unexpected system call " << type << "\n";
