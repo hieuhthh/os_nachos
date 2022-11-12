@@ -37,12 +37,37 @@
 #include "sysdep.h"
 #include "openfile.h"
 
-#ifdef FILESYS_STUB 		// Temporarily implement file system calls as 
-				// calls to UNIX, until the real file system
-				// implementation is available
+#ifdef FILESYS_STUB 		
+// Temporarily implement file system calls as 
+// calls to UNIX, until the real file system
+// implementation is available
 class FileSystem {
   public:
-    FileSystem() {}
+  	// 20 file descriptors
+	// position 0, 1: stdin, stdout
+  	OpenFile *openFiles[20]; 
+
+    FileSystem()
+	{
+		for (int i = 0; i < 20; ++i)
+			openFiles[i] = NULL;
+
+		this->Create("stdin");
+		this->Create("stdout");
+
+		openFiles[0] = this->Open("stdin");
+		openFiles[1] = this->Open("stdout");
+	}
+
+	~FileSystem()
+	{
+		for (int i = 0; i < 20; ++i)
+			if(openFiles[i])
+			{
+				delete openFiles[i];
+				openFiles[i] = NULL;
+			}	
+	}
 
     bool Create(char *name) {
 	int fileDescriptor = OpenForWrite(name);
@@ -61,17 +86,33 @@ class FileSystem {
 
     bool Remove(char *name) { return Unlink(name) == 0; }
 
+	int findFreeSlot()
+	{
+		for (int i = 2; i < 20; ++i)
+			if(openFiles[i] == NULL)
+				return i;
+		
+		// no free slot
+		return -1;
+	}
+
 };
 
 #else // FILESYS
 class FileSystem {
   public:
+    // 20 file descriptors
+	// position 0, 1: stdin, stdout
+  	OpenFile *openFiles[20]; 
+
     FileSystem(bool format);		// Initialize the file system.
 					// Must be called *after* "synchDisk" 
 					// has been initialized.
     					// If "format", there is nothing on
 					// the disk, so initialize the directory
     					// and the bitmap of free blocks.
+
+	~FileSystem();
 
     bool Create(char *name, int initialSize);  	
 					// Create a file (UNIX creat)
@@ -83,6 +124,8 @@ class FileSystem {
     void List();			// List all the files in the file system
 
     void Print();			// List all the files and their contents
+
+	int findFreeSlot();
 
   private:
    OpenFile* freeMapFile;		// Bit map of free disk blocks,

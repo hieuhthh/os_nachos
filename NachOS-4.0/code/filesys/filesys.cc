@@ -140,6 +140,15 @@ FileSystem::FileSystem(bool format)
         freeMapFile = new OpenFile(FreeMapSector);
         directoryFile = new OpenFile(DirectorySector);
     }
+
+    for (int i = 0; i < 20; ++i)
+        openFiles[i] = NULL;
+
+    this->Create("stdin");
+    this->Create("stdout");
+
+    openFiles[0] = this->Open("stdin");
+    openFiles[1] = this->Open("stdout");
 }
 
 //----------------------------------------------------------------------
@@ -336,5 +345,29 @@ FileSystem::Print()
     delete freeMap;
     delete directory;
 } 
+
+// Code here
+
+int FileSystem::findFreeSlot()
+{
+    for (int i = 2; i < 20; ++i)
+        if(openFiles[i] == NULL)
+            return i;
+    
+    // no free slot
+    return -1;
+}
+
+FileSystem::~FileSystem()
+{
+    for (int i = 0; i < 20; ++i)
+        if(openFiles[i])
+        {
+            delete openFiles[i];
+            openFiles[i] = NULL;
+        }	
+}
+
+// End code
 
 #endif // FILESYS_STUB

@@ -151,6 +151,7 @@ void SC_ReadNum_Handler()
 
 void SC_PrintNum_Handler()
 {
+	// print number from register 4 and print to console
 	int int_num = kernel->machine->ReadRegister(4);
 	long long num = (long long)int_num;
 
@@ -190,6 +191,7 @@ void SC_PrintNum_Handler()
 
 void SC_ReadChar_Handler()
 {
+	// read char and write it to register 2 (return)
 	char c = kernel->synchConsoleIn->GetChar();
 
 	DEBUG(dbgSys, "ReadChar: " << c << "\n");
@@ -201,6 +203,7 @@ void SC_ReadChar_Handler()
 
 void SC_PrintChar_Handler()
 {
+	// read char from register 4 and print to console
 	char c = kernel->machine->ReadRegister(4);
 
 	DEBUG(dbgSys, "PrintChar: " << c << "\n");
@@ -282,6 +285,8 @@ int System2User(int virtAddr, int len, char *buffer)
 
 void SC_ReadString_Handler()
 {
+	// read address from register 4 (arg1)
+	// read length from register 5 (arg2)
 	int addr = kernel->machine->ReadRegister(4);
 	int len = kernel->machine->ReadRegister(5);
 
@@ -289,6 +294,7 @@ void SC_ReadString_Handler()
 	if (len < 0 or len > MAX_LEN)
 	{
 		DEBUG(dbgSys, "Invalid string length\n");
+		IncreaseProgramCounter();
 		return;
 	}
 
@@ -316,6 +322,7 @@ void SC_ReadString_Handler()
 
 void SC_PrintString_Handler()
 {
+	// read address from register 4 (arg1)
 	int addr = kernel->machine->ReadRegister(4);
 	// Moving the buffer from user space to kernel space
 	char *buffer = User2System(addr, MAX_LEN);
@@ -339,6 +346,7 @@ void SC_PrintString_Handler()
 
 void SC_Create_Handler()
 {
+	// read address from register 4 (arg1)
 	int addr = kernel->machine->ReadRegister(4);
 	// Moving the buffer from user space to kernel space
 	char *buffer = User2System(addr, MAX_LEN_FILE_NAME);
@@ -373,6 +381,162 @@ void SC_Create_Handler()
 
 	DEBUG(dbgSys, "Create file successfully\n");
 	kernel->machine->WriteRegister(2, 0);
+	delete[]buffer;
+	IncreaseProgramCounter();
+}
+
+void SC_Open_Handler()
+{
+	// read address from register 4 (arg1)
+	int addr = kernel->machine->ReadRegister(4);
+	// Moving the buffer from user space to kernel space
+	char *buffer = User2System(addr, MAX_LEN_FILE_NAME);
+	int freeSlot = kernel->fileSystem->findFreeSlot(); // OpenFileID
+
+	printf("freeSlot: %d\n", freeSlot);
+
+	// freeSlot == -1: No free slot
+	// freeSlot == 0: stdin
+	// freeSlot == 1: stdout
+	if (freeSlot <= 1)
+	{
+		DEBUG(dbgSys, "No free slot\n");
+		kernel->machine->WriteRegister(2, -1);
+		delete[]buffer;
+		IncreaseProgramCounter();
+		return;
+	}
+
+	if ((kernel->fileSystem->openFiles[freeSlot] = kernel->fileSystem->Open(buffer)) != NULL)
+	{
+		DEBUG(dbgSys, "Open file successfully\n");
+		kernel->machine->WriteRegister(2, freeSlot); //tra ve 
+	}
+	else
+	{
+		DEBUG(dbgSys, "Open file unsuccessfully\n");
+		kernel->machine->WriteRegister(2, -1);
+	}
+
+	delete[]buffer;
+	IncreaseProgramCounter();
+}
+
+void SC_Close_Handler()
+{
+	// close file with OpenFileID
+	// stdin: 0
+	// stdout: 1
+	// read OpenFileID from register 4 (arg1)
+	int OpenFileID = kernel->machine->ReadRegister(4);
+
+	if (OpenFileID < 0 || OpenFileID >= 20)
+	{
+		DEBUG(dbgSys, "Not valid OpenFileID\n");
+		kernel->machine->WriteRegister(2, -1);
+		IncreaseProgramCounter();
+		return;
+	}
+
+	if (kernel->fileSystem->openFiles[OpenFileID])
+	{
+		delete kernel->fileSystem->openFiles[OpenFileID];
+		kernel->fileSystem->openFiles[OpenFileID] = NULL;
+		DEBUG(dbgSys, "Close file successfully\n");
+		kernel->machine->WriteRegister(2, 0);
+	}
+	else
+	{
+		DEBUG(dbgSys, "No need to close file\n");
+		kernel->machine->WriteRegister(2, -1);
+	}
+
+	IncreaseProgramCounter();
+}
+
+void SC_Write_Handler()
+{
+	// input: arg1(reg4) - string buffer from user-space, arg2(reg5) - the length of that string, arg3(reg6) integer index of an opened file.
+	// output: success: the number of bytes written, failure: -1
+	// function: write content into a file
+
+	// read address from register 4 (arg1)
+	// read length from register 5 (arg2)
+	// read OpenFileID from register 6 (arg3)
+	int addr = kernel->machine->ReadRegister(4);
+	int len = kernel->machine->ReadRegister(5);
+	int OpenFileID = kernel->machine->ReadRegister(6);
+	char *buffer;
+	int i = 0;
+
+	if (OpenFileID < 0 || OpenFileID >= 20)
+	{
+		DEBUG(dbgSys, "Not valid OpenFileID\n");
+		kernel->machine->WriteRegister(2, -1);
+		IncreaseProgramCounter();
+		return;
+	}
+
+	if (!kernel->fileSystem->openFiles[OpenFileID])
+	{
+		DEBUG(dbgSys, "OpenFileID not exist\n");
+		kernel->machine->WriteRegister(2, -1);
+		IncreaseProgramCounter();
+		return;
+	}
+
+	// stdin
+	if (OpenFileID == 0) 
+	{
+		DEBUG(dbgSys, "Cant do stdin\n");
+		kernel->machine->WriteRegister(2, -1);
+		IncreaseProgramCounter();
+		return;
+	}
+
+	buffer = User2System(addr, len);
+	
+	if (!buffer)
+	{
+		DEBUG(dbgSys, "Buffer is NULL\n");
+		kernel->machine->WriteRegister(2, -1);
+		IncreaseProgramCounter();
+		return;
+	}
+
+	if (len > (int)strlen(buffer))
+		len = (int)strlen(buffer);
+
+	// stdout
+	if (OpenFileID == 1)
+	{
+		while (i < len && buffer[i] != '\0')
+			kernel->synchConsoleOut->PutChar(buffer[i++]);
+
+		// easy to read
+		kernel->synchConsoleOut->PutChar('\n');
+		
+		DEBUG(dbgSys, "Write stdout successfully\n");
+		kernel->machine->WriteRegister(2, i);
+		delete[]buffer;
+		IncreaseProgramCounter();
+		return;
+	}
+
+	// write to file
+	i = kernel->fileSystem->openFiles[OpenFileID]->Write(buffer, len);
+
+	if (i >= 0)
+	{
+		DEBUG(dbgSys, "Write file successfully\n");
+		kernel->machine->WriteRegister(2, i);
+	}
+	else
+	{
+		DEBUG(dbgSys, "Write file unsuccessfully\n");
+		kernel->machine->WriteRegister(2, -1);
+	}
+
 	delete[]buffer;
 	IncreaseProgramCounter();
 }
@@ -462,13 +626,24 @@ void ExceptionHandler(ExceptionType which)
 				case SC_Create:
 					SC_Create_Handler();
 					break;
+				case SC_Open:
+					SC_Open_Handler();
+					break;
+				case SC_Close:
+					SC_Close_Handler();
+					break;
+				case SC_Write:
+					SC_Write_Handler();
+					break;
       			default:
 					cerr << "Unexpected system call " << type << "\n";
+					SysHalt();
 					break;
 			}
       		break;
     	default:
       		cerr << "Unexpected user mode exception " << (int)which << "\n";
+			SysHalt();
       		ASSERTNOTREACHED();
     }
 }
