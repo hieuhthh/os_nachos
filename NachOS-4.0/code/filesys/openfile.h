@@ -58,7 +58,6 @@ class OpenFile {
 	{
 		currentOffset = pos;
 	}
-
     
   private:
     int file;

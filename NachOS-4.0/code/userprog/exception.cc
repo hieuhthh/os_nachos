@@ -393,8 +393,6 @@ void SC_Open_Handler()
 	char *buffer = User2System(addr, MAX_LEN_FILE_NAME);
 	int freeSlot = kernel->fileSystem->findFreeSlot(); // OpenFileID
 
-	printf("freeSlot: %d\n", freeSlot);
-
 	// freeSlot == -1: No free slot
 	// freeSlot == 0: stdin
 	// freeSlot == 1: stdout
@@ -692,6 +690,37 @@ void SC_Seek_Handler()
 	IncreaseProgramCounter();
 }
 
+void SC_Remove_Handler()
+{
+	// read address from register 4 (arg1)
+	int addr = kernel->machine->ReadRegister(4);
+	char *buffer;
+
+	buffer = User2System(addr, MAX_LEN);
+	
+	if (!buffer)
+	{
+		DEBUG(dbgSys, "Buffer is NULL\n");
+		kernel->machine->WriteRegister(2, -1);
+		IncreaseProgramCounter();
+		return;
+	}
+
+	if (kernel->fileSystem->Remove(buffer))
+	{
+		DEBUG(dbgSys, "Remove succesfully\n");
+		kernel->machine->WriteRegister(2, 0);
+	}
+	else
+	{
+		DEBUG(dbgSys, "Remove unsuccesfully\n");
+		kernel->machine->WriteRegister(2, -1);
+	}
+
+	delete[]buffer;
+	IncreaseProgramCounter();
+}
+
 void ExceptionHandler(ExceptionType which)
 {
     int type = kernel->machine->ReadRegister(2);
@@ -791,6 +820,9 @@ void ExceptionHandler(ExceptionType which)
 					break;
 				case SC_Seek:
 					SC_Seek_Handler();
+					break;
+				case SC_Remove:
+					SC_Remove_Handler();
 					break;
       			default:
 					cerr << "Unexpected system call " << type << "\n";
