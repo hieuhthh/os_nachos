@@ -454,12 +454,107 @@ void SC_Close_Handler()
 	IncreaseProgramCounter();
 }
 
+void SC_Read_Handler()
+{
+	// read address from register 4 (arg1)
+	// read length from register 5 (arg2)
+	// read OpenFileID from register 6 (arg3)
+	int addr = kernel->machine->ReadRegister(4);
+	int len = kernel->machine->ReadRegister(5);
+	int OpenFileID = kernel->machine->ReadRegister(6);
+	char *buffer;
+	int i = 0;
+	char c;
+
+	if (OpenFileID < 0 || OpenFileID >= 20)
+	{
+		DEBUG(dbgSys, "Not valid OpenFileID\n");
+		kernel->machine->WriteRegister(2, -1);
+		IncreaseProgramCounter();
+		return;
+	}
+
+	if (!kernel->fileSystem->openFiles[OpenFileID])
+	{
+		DEBUG(dbgSys, "OpenFileID not exist\n");
+		kernel->machine->WriteRegister(2, -1);
+		IncreaseProgramCounter();
+		return;
+	}
+
+	// stdout
+	if (OpenFileID == 1) 
+	{
+		DEBUG(dbgSys, "Cant do stdout\n");
+		kernel->machine->WriteRegister(2, -1);
+		IncreaseProgramCounter();
+		return;
+	}
+
+	buffer = User2System(addr, len);
+	
+	if (!buffer)
+	{
+		DEBUG(dbgSys, "Buffer is NULL\n");
+		kernel->machine->WriteRegister(2, -1);
+		IncreaseProgramCounter();
+		return;
+	}
+
+	// check if length < 0 or length too big (> MAX_LEN)
+	if (len < 0 or len > MAX_LEN)
+	{
+		DEBUG(dbgSys, "Invalid string length\n");
+		kernel->machine->WriteRegister(2, -1);
+		IncreaseProgramCounter();
+		return;
+	}
+
+	// stdin
+	if (OpenFileID == 0)
+	{
+		while (true)
+		{
+			c = kernel->synchConsoleIn->GetChar();
+
+			if (i >= len - 1 || c == '\0' || c == '\n')
+				break;
+			
+			buffer[i++] = c;
+		}
+
+		buffer[i] = '\0';
+
+		System2User(addr, i, buffer);
+
+		DEBUG(dbgSys, "Read stdin successfully\n");
+		kernel->machine->WriteRegister(2, i);
+		delete[]buffer;
+		IncreaseProgramCounter();
+		return;
+	}
+
+	// read file
+	i = kernel->fileSystem->openFiles[OpenFileID]->Read(buffer, len);
+
+	if (i >= 0)
+	{
+		System2User(addr, i, buffer);
+		DEBUG(dbgSys, "Read file successfully\n");
+		kernel->machine->WriteRegister(2, i);
+	}
+	else
+	{
+		DEBUG(dbgSys, "Read file unsuccessfully\n");
+		kernel->machine->WriteRegister(2, -1);
+	}
+
+	delete[]buffer;
+	IncreaseProgramCounter();
+}
+
 void SC_Write_Handler()
 {
-	// input: arg1(reg4) - string buffer from user-space, arg2(reg5) - the length of that string, arg3(reg6) integer index of an opened file.
-	// output: success: the number of bytes written, failure: -1
-	// function: write content into a file
-
 	// read address from register 4 (arg1)
 	// read length from register 5 (arg2)
 	// read OpenFileID from register 6 (arg3)
@@ -506,6 +601,15 @@ void SC_Write_Handler()
 
 	if (len > (int)strlen(buffer))
 		len = (int)strlen(buffer);
+
+	// check if length < 0 or length too big (> MAX_LEN)
+	if (len < 0 or len > MAX_LEN)
+	{
+		DEBUG(dbgSys, "Invalid length\n");
+		kernel->machine->WriteRegister(2, -1);
+		IncreaseProgramCounter();
+		return;
+	}
 
 	// stdout
 	if (OpenFileID == 1)
@@ -631,6 +735,9 @@ void ExceptionHandler(ExceptionType which)
 					break;
 				case SC_Close:
 					SC_Close_Handler();
+					break;
+				case SC_Read:
+					SC_Read_Handler();
 					break;
 				case SC_Write:
 					SC_Write_Handler();
