@@ -645,6 +645,53 @@ void SC_Write_Handler()
 	IncreaseProgramCounter();
 }
 
+void SC_Seek_Handler()
+{
+	// read position from register 4 (arg1)
+	// read OpenFileID from register 5 (arg2)
+	int pos = kernel->machine->ReadRegister(4);
+	int OpenFileID = kernel->machine->ReadRegister(5);
+	int file_len;
+
+	if (OpenFileID < 0 || OpenFileID >= 20)
+	{
+		DEBUG(dbgSys, "Not valid OpenFileID\n");
+		kernel->machine->WriteRegister(2, -1);
+		IncreaseProgramCounter();
+		return;
+	}
+
+	if (!kernel->fileSystem->openFiles[OpenFileID])
+	{
+		DEBUG(dbgSys, "OpenFileID not exist\n");
+		kernel->machine->WriteRegister(2, -1);
+		IncreaseProgramCounter();
+		return;
+	}
+
+	file_len = kernel->fileSystem->openFiles[OpenFileID]->Length();
+
+	if (pos < -1 || pos > file_len)
+	{
+		DEBUG(dbgSys, "Not valid position\n");
+		kernel->machine->WriteRegister(2, -1);
+		IncreaseProgramCounter();
+		return;
+	}
+
+	// full length
+	if (pos == -1) 
+	{
+		DEBUG(dbgSys, "Seek end file\n");
+		pos = file_len;
+	}
+
+	kernel->fileSystem->openFiles[OpenFileID]->Seek(pos);
+	kernel->machine->WriteRegister(2, pos);
+
+	IncreaseProgramCounter();
+}
+
 void ExceptionHandler(ExceptionType which)
 {
     int type = kernel->machine->ReadRegister(2);
@@ -741,6 +788,9 @@ void ExceptionHandler(ExceptionType which)
 					break;
 				case SC_Write:
 					SC_Write_Handler();
+					break;
+				case SC_Seek:
+					SC_Seek_Handler();
 					break;
       			default:
 					cerr << "Unexpected system call " << type << "\n";

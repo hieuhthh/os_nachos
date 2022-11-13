@@ -112,7 +112,7 @@ ifeq ($(hosttype),unknown)
 PROGRAMS = unknownhost
 else
 # change this if you create a new test program!
-PROGRAMS = add halt shell matmult sort segments help check_read_num_add check_str check_random_gen check_char bubblesort ascii create read_write_file
+PROGRAMS = add halt shell matmult sort segments help check_read_num_add check_str check_random_gen check_char bubblesort ascii create read_write_file seek
 endif
 
 # ../build.linux/nachos -x halt
@@ -189,6 +189,12 @@ read_write_file.o: read_write_file.c
 read_write_file: read_write_file.o start.o
 	$(LD) $(LDFLAGS) start.o read_write_file.o -o read_write_file.coff
 	$(COFF2NOFF) read_write_file.coff read_write_file
+
+seek.o: seek.c
+	$(CC) $(CFLAGS) -c seek.c
+seek: seek.o start.o
+	$(LD) $(LDFLAGS) start.o seek.o -o seek.coff
+	$(COFF2NOFF) seek.coff seek
 
 # default
 
