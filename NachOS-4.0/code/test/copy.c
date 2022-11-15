@@ -29,6 +29,7 @@ int main(){
         } 
         info_len = Seek(-1, source_id);
         Seek(0, source_id);
+        
         for (i = 0; i < info_len; ++i){
             Read(&read_character, 1, source_id);
             Write(&read_character, 1, dest_id);
