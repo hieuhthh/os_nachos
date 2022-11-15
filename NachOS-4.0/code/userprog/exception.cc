@@ -344,6 +344,7 @@ void SC_PrintString_Handler()
 	IncreaseProgramCounter();
 }
 
+/// @brief Hàm Open được demo ở createfile.c
 void SC_Create_Handler()
 {
 	// read address from register 4 (arg1)
@@ -385,6 +386,7 @@ void SC_Create_Handler()
 	IncreaseProgramCounter();
 }
 
+/// @brief Hàm Open được demo ở createfile.c
 void SC_Open_Handler()
 {
 	// read address from register 4 (arg1)
@@ -416,10 +418,11 @@ void SC_Open_Handler()
 		kernel->machine->WriteRegister(2, -1);
 	}
 
-	delete[]buffer;
+	delete[] buffer;
 	IncreaseProgramCounter();
 }
 
+/// @brief Hàm Close được demo ở createfile.c
 void SC_Close_Handler()
 {
 	// close file with OpenFileID
@@ -452,6 +455,7 @@ void SC_Close_Handler()
 	IncreaseProgramCounter();
 }
 
+/// @brief Hàm Read được demo ở file read_write_file.c
 void SC_Read_Handler()
 {
 	// read address from register 4 (arg1)
@@ -551,6 +555,7 @@ void SC_Read_Handler()
 	IncreaseProgramCounter();
 }
 
+/// @brief Hàm Write được demo ở file read_write_file.c
 void SC_Write_Handler()
 {
 	// read address from register 4 (arg1)
