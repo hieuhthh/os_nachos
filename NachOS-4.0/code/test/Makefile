@@ -112,8 +112,10 @@ ifeq ($(hosttype),unknown)
 PROGRAMS = unknownhost
 else
 # change this if you create a new test program!
-PROGRAMS = add halt shell matmult sort segments help check_read_num_add check_str check_random_gen check_char bubblesort ascii createfile read_write_file seek remove cat copy delete concatenate
+PROGRAMS = add halt shell matmult sort segments help check_read_num_add check_str check_random_gen check_char bubblesort ascii createfile read_write_file seek remove cat copy delete concatenate testing
 endif
+
+
 
 # ../build.linux/nachos -x halt
 
@@ -227,6 +229,14 @@ concatenate.o: concatenate.c
 concatenate: concatenate.o start.o
 	$(LD) $(LDFLAGS) start.o concatenate.o -o concatenate.coff
 	$(COFF2NOFF) concatenate.coff concatenate
+
+# Temp file create for testing
+testing.o: testing.c
+	$(CC) $(CFLAGS) -c testing.c
+testing: testing.o start.o
+	$(LD) $(LDFLAGS) start.o testing.o -o testing.coff
+	$(COFF2NOFF) testing.coff testing
+
 
 # default
 

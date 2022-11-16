@@ -8,6 +8,7 @@ int main(){
     int source_id;
     int info_len;
     char read_character;
+    char end_character;
     int i;
     int dest_id;
     PrintString("Enter source file name to copy contents (filename length <= 32): ");
@@ -21,15 +22,15 @@ int main(){
     if (source_id != -1){
         // PrintString("Source file successfully\n");
         dest_id = Open(dest_file);
-        if (dest_id == -1){
+        if (dest_id != -1){
             Close(dest_id);
-            dest_id = Create(dest_file);
-            
-            dest_id = Open(dest_file);
+            Remove(dest_file);   
         } 
+
+        Create(dest_file);
+        dest_id = Open(dest_file);
         info_len = Seek(-1, source_id);
         Seek(0, source_id);
-        
         for (i = 0; i < info_len; ++i){
             Read(&read_character, 1, source_id);
             Write(&read_character, 1, dest_id);
