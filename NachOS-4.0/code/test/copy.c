@@ -17,29 +17,37 @@ int main(){
     PrintString("Enter destination file name to copy contents (filename length <= 32): ");
     ReadString(dest_file, MAX_LEN_FILE_NAME);
 
-    source_id = Open(source_file);
+    // If two file source and dest are the same
+    if (0)
+        PrintString("The source file and destination file is the same\n");
+    else {
+        source_id = Open(source_file);
 
-    if (source_id != -1){
-        // PrintString("Source file successfully\n");
-        dest_id = Open(dest_file);
-        if (dest_id != -1){
-            Close(dest_id);
-            Remove(dest_file);   
-        } 
-
-        Create(dest_file);
-        dest_id = Open(dest_file);
-        info_len = Seek(-1, source_id);
-        Seek(0, source_id);
-        for (i = 0; i < info_len; ++i){
-            Read(&read_character, 1, source_id);
-            Write(&read_character, 1, dest_id);
+        if (source_id != -1){
+            dest_id = Open(dest_file);        
+            if (dest_id != -1){
+                Close(dest_id);
+                Remove(dest_file);   
+            } 
+            Create(dest_file);
+            dest_id = Open(dest_file);
+            if (dest_id == -1){
+                PrintString("Failed to open destination file\n");
+                Halt();
+            } else {
+                info_len = Seek(-1, source_id);
+                Seek(0, source_id);
+                for (i = 0; i < info_len; ++i){
+                    Read(&read_character, 1, source_id);
+                    Write(&read_character, 1, dest_id);
+                }
+                Close(dest_id);
+            }
+            Close(source_id);
         }
-        Close(dest_id);
+        else 
+            PrintString("Failed to open source file\n");
     }
-    else PrintString("Failed to open source file\n");
-    
-    Close(source_id);
     
     Halt();
 }
