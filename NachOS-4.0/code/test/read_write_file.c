@@ -12,8 +12,6 @@ int main()
     char read_str[MAX_LEN];
     int info_len = 50;
 
-    PrintString("Enter filename to create (filename length <= 32): ");
-    ReadString(buffer, MAX_LEN_FILE_NAME);
 
     return_value = Create(buffer);
 
