@@ -648,6 +648,7 @@ void SC_Write_Handler()
 	IncreaseProgramCounter();
 }
 
+/// @brief Hàm Write được demo ở file seek.c
 void SC_Seek_Handler()
 {
 	// read position from register 4 (arg1)
@@ -695,6 +696,7 @@ void SC_Seek_Handler()
 	IncreaseProgramCounter();
 }
 
+/// @brief Hàm Write được demo ở file remove.c
 void SC_Remove_Handler()
 {
 	// read address from register 4 (arg1)
